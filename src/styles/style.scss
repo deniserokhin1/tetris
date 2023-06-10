@@ -6,6 +6,7 @@
 }
 
 body {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -17,13 +18,17 @@ body {
 }
 
 .grid {
-    display: grid;
+    display: none;
     grid-template-columns: repeat(10, auto);
     grid-template-rows: repeat(20, auto);
     padding: 0.6vh;
     gap: 0.3vh;
     border-radius: 0.6vh;
     background-color: rgba(1, 8, 89, 0.8);
+
+    &.start {
+        display: grid;
+    }
 }
 
 .grid > div {
@@ -32,6 +37,10 @@ body {
     width: var(--cell-size);
     border-radius: 0.3vh;
     background-color: rgba(126, 150, 221, 0.2);
+}
+
+.grid > div.ghost {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 .grid > div.I {
@@ -72,4 +81,92 @@ body {
 .grid > div.ghost,
 .grid > div.sad {
     box-shadow: inset 2px 2px 2px rgba(255, 255, 255, 0.2), inset -2px -2px 2px rgba(1, 8, 89, 0.2);
+}
+
+.grid > div.gameover {
+    animation: hide 0.5s;
+}
+
+.settings {
+    --button-size: min(3vh, 6vw);
+    --font-size: min(3vh, 6vw);
+    --border-size: min(1vh, 2vw);
+    all: initial;
+    padding: var(--button-size) calc(var(--button-size) * 2);
+    background: #466cc2;
+    border-radius: var(--border-size);
+    font-family: inherit;
+    font-size: inherit;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+    color: aliceblue;
+    font-size: var(--font-size);
+}
+
+.settings:before {
+    --light-size: min(5vh, 10vw);
+    content: '';
+    position: absolute;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.3),
+        rgba(255, 255, 255, 0.3),
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.1)
+    );
+    opacity: 0.5;
+    top: 0;
+    left: 0;
+    width: var(--light-size);
+    height: 100%;
+    transform: translateX(calc(var(--button-size) * -10)) skewX(-45deg);
+}
+
+.settings:active {
+    transform: scale(0.95);
+}
+
+.settings:hover {
+    --shadow-size: min(1vh, 2vw);
+    box-shadow: 0 var(--shadow-size) calc(var(--shadow-size) * 2) rgba(0, 0, 0, 0.4);
+    &:before {
+        animation: move-light 1.5s ease-in-out;
+        animation-iteration-count: infinite;
+        -moz-animation-iteration-count: infinite;
+        -webkit-animation-iteration-count: infinite;
+    }
+}
+
+.hide {
+    display: none;
+}
+
+@keyframes move-light {
+    0% {
+        transform: translateX(calc(var(--button-size) * -10)) skewX(-45deg);
+    }
+    100% {
+        transform: translateX(calc(var(--button-size) * 20)) skewX(-45deg);
+    }
+}
+
+@keyframes hide {
+    0% {
+        transform: scale(0.8) rotate(30deg);
+    }
+
+    45% {
+        transform: scale(0.8) rotate(-30deg);
+    }
+
+    90% {
+        transform: scale(1) rotate(0);
+    }
+
+    100% {
+        transform: scale(0) rotate(0);
+    }
 }

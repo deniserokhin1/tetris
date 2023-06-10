@@ -8,6 +8,7 @@ import {
 } from './utilities'
 
 export class Tetris {
+    isGameOver: boolean = false
     playfield: Array<(number | string)[]> = []
     tetromino: IFigure = {
         column: 0,
@@ -15,8 +16,15 @@ export class Tetris {
         name: '',
         row: 0,
         matrixSize: 0,
+        ghostColumn: 0,
+        ghostRow: 0,
     }
-    constructor() {
+    isPromt: boolean = false
+    isAutoMove: boolean = true
+    constructor(board: HTMLElement) {
+        for (let index = 0; index < PLAYFIELD_ROWS * PLAYFIELD_COLUMNS; index++) {
+            board.append(document.createElement('div'))
+        }
         this.init()
     }
 
@@ -38,7 +46,7 @@ export class Tetris {
         const matrixSize = matrix.length
 
         const column = PLAYFIELD_COLUMNS / 2 - Math.floor(matrix.length / 2)
-        const row = -2
+        const row = -1
 
         this.tetromino = {
             name,
@@ -46,7 +54,11 @@ export class Tetris {
             row,
             column,
             matrixSize,
+            ghostColumn: this.isPromt ? column : -1,
+            ghostRow: this.isPromt ? row : -1,
         }
+
+        this.calculateGhostPosition()
     }
 
     moveFigureDown() {
@@ -59,19 +71,36 @@ export class Tetris {
 
     moveFigureRight() {
         this.tetromino.column += 1
-        if (!this.canMove()) this.tetromino.column -= 1
+        if (!this.canMove()) {
+            this.tetromino.column -= 1
+        } else {
+            this.calculateGhostPosition()
+        }
     }
 
     moveFigureLeft() {
         this.tetromino.column -= 1
-        if (!this.canMove()) this.tetromino.column += 1
+        if (!this.canMove()) {
+            this.tetromino.column += 1
+        } else {
+            this.calculateGhostPosition()
+        }
     }
 
     rotateFigure() {
         const prevMatrix = this.tetromino.matrix
         const rotatedMatrix = rotateMatrix(this.tetromino.matrix)
         this.tetromino.matrix = rotatedMatrix
-        if (!this.canMove()) this.tetromino.matrix = prevMatrix
+        if (!this.canMove()) {
+            this.tetromino.matrix = prevMatrix
+        } else {
+            this.calculateGhostPosition()
+        }
+    }
+
+    dropFigureDown() {
+        this.tetromino.row = this.tetromino.ghostRow
+        this.landFigure()
     }
 
     canMove() {
@@ -98,15 +127,59 @@ export class Tetris {
         for (let row = 0; row < this.tetromino.matrixSize; row++) {
             for (let column = 0; column < this.tetromino.matrixSize; column++) {
                 if (!this.tetromino.matrix[row][column]) continue
+                if (this.isOutSideOfTopBoard(row)) {
+                    this.isGameOver = true
+                    return
+                }
 
                 this.playfield[this.tetromino.row + row][this.tetromino.column + column] =
                     this.tetromino.name
             }
         }
+        this.clearFilledRows()
         this.generateFigure()
+    }
+
+    isOutSideOfTopBoard(row: number) {
+        return this.tetromino.row + row < 0
     }
 
     isTouch(row: number, column: number) {
         return this.playfield[this.tetromino.row + row]?.[this.tetromino.column + column]
+    }
+
+    clearFilledRows() {
+        const filledLines = this.findFilledRows()
+        this.removeFilledRows(filledLines)
+    }
+
+    findFilledRows() {
+        const filledRows = []
+        for (let row = 0; row < PLAYFIELD_ROWS; row++) {
+            if (this.playfield[row].every((cell) => Boolean(cell))) filledRows.push(row)
+        }
+        return filledRows
+    }
+
+    removeFilledRows(filledRows: number[]) {
+        filledRows.forEach((row) => this.dropRowsAbove(row))
+    }
+
+    dropRowsAbove(rowToDelete: number) {
+        for (let row = rowToDelete; row > 0; row--) {
+            this.playfield[row] = this.playfield[row - 1]
+        }
+        this.playfield[0] = new Array(PLAYFIELD_COLUMNS).fill(0)
+    }
+
+    calculateGhostPosition() {
+        const figureRow = this.tetromino.row
+        this.tetromino.row++
+        while (this.canMove()) {
+            this.tetromino.row++
+        }
+        this.tetromino.ghostRow = this.tetromino.row - 1
+        this.tetromino.ghostColumn = this.tetromino.column
+        this.tetromino.row = figureRow
     }
 }

@@ -4,6 +4,8 @@ export interface IFigure {
     row: number
     column: number
     matrixSize: number
+    ghostColumn: number
+    ghostRow: number
 }
 
 export interface IFiguresSchema {
